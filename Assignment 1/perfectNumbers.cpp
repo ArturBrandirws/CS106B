@@ -41,6 +41,7 @@ bool isPerfect(int num) {
 
 int main() {
     
+    // print the obejctive of the code
 	cout << "Perfect numbers before 10000 are:" << endl;
 
     // for every number between 2 and 10000
