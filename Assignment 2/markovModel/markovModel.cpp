@@ -1,8 +1,3 @@
-/* 
- * File: markovModel.cpp
- * --------------
- */
-
 #include <iostream>
 #include "genlib.h" 
 #include "simpio.h" 
@@ -52,16 +47,23 @@ Map <int> getCharSequence(Vector <string> &charsInSeed, int order) {
 			// repeat based on the order choosed
 			for (int i = 0; i < order; i++) {
 				
+				// add in the sequence the next chars depending on what order was selected
 				sequence += charsInSeed[index + i];
 			}
+			// if the sequence already exist
 			if (charFrequency.containsKey(sequence)) {
 				
+				// create a count for the sequence
 				int count = charFrequency.getValue(sequence);
 				
+				// add 1 in the count
 				charFrequency.add(sequence, count + 1);
 			}
+			
+			// if is the first time of the sequence
 			else {
-
+				
+				// add the pair of key and value for the sequence
 				charFrequency.add(sequence, 1);
 			}
 		}
@@ -102,16 +104,21 @@ Map <int> readFile(ifstream &in, int order) {
 
 int getFileSize(ifstream &in) {
 	
+	// initialize a char 
 	char ch;
-
+	
+	// create a count
 	int count = 0;
-
+	
 	while (true) {
-
+		
+		// get the next char in the file
 		in.get(ch);
 		
+		// if the file has ended, break
 		if (in.fail()) break;
-
+		
+		// add 1 in count
 		count++;
 	}
 
@@ -119,26 +126,33 @@ int getFileSize(ifstream &in) {
 }
 
 Map <double> getCharsFrequency(ifstream &in, int numOfChars, int order) {
+	
+	// Get character frequency map from file
+    Map<int> charFrequencyAtfile = readFile(in, order);
+    
+	// Create an iterator to go through the frequency
+    Map<int>::Iterator itr = charFrequencyAtfile.iterator();
+    
+	// Create a map to store characters probability
+    Map<double> charProbability;
 
-	Map <int> charFrequencyAtfile = readFile(in, order);
-
-	Map <int>::Iterator itr = charFrequencyAtfile.iterator();
-
-	Map <double> charProbability;
-		
-	while (itr.hasNext()) {
-			
+    // Calculate probability for each character
+    while (itr.hasNext()) {
+        
+		// create a string with the char or string
 		string key = itr.next();
 
-		double count = charFrequencyAtfile.getValue(key);
+		// get the value with the key(char or string)
+        double count = charFrequencyAtfile.getValue(key);
 
-		double probability = count / numOfChars;
+		// calculate the probability
+        double probability = count / numOfChars;
 
-		charProbability.add(key, probability);
+		// add to the probability map
+        charProbability.add(key, probability);
+    }
 
-	}
-	
-	return charProbability;
+    return charProbability;
 }
 
 char generateRandomChar(Map <double> &charProbability) {
@@ -174,32 +188,64 @@ char generateRandomChar(Map <double> &charProbability) {
 }
 
 string generateRandomText(Map <double> &charProbability, int outputTextSize, int order) {
-    string randomText;
-
+    
+	// initializes a string to be the random text
+	string randomText;
+	
+	// if the order selected was 1
     if (order == 1) {
+
+		// for each char in the output text
         for (int i = 0; i < outputTextSize; i++) {
-            char randomChar = generateRandomChar(charProbability);
+            
+			// get a random char
+			char randomChar = generateRandomChar(charProbability);
+
+			// add the random char to the string
             randomText += randomChar;
         }
-    } else if (order >= 2) {
-        string key = "";
-        while (randomText.length() < outputTextSize) {
-            char randomChar = generateRandomChar(charProbability);
-            key += randomChar;
-            if (key.length() > order) {
-                key = key.substr(1); // Remove the first character if the key length exceeds order
-            }
-            if (charProbability.containsKey(key)) {
-                double randomProbability = (double)rand() / RAND_MAX;
-                if (randomProbability <= charProbability[key]) {
-                    randomText += key[key.length() - 1]; // Add the last character of the key to random text
-                }
+	}
+    
+   // If the order selected was 2 or more
+   else if (order >= 2) {
+    
+	// Create an empty string to store character sequences
+    string key = "";
+    
+	// Generate random text based on chosen order
+    while (randomText.length() < outputTextSize) {
+        
+		// get a random sequence
+		char randomChar = generateRandomChar(charProbability);
+        
+		// add the sequence to the key
+		key += randomChar;
+        
+		// If the length of the character sequence exceeds the order
+        if (key.length() > order) {
+            
+			// Remove the first character to maintain the sequence length
+            key = key.substr(1); // Remove the first character if the key length exceeds order
+        }
+        
+		// Check if the character sequence is in the probability map
+        if (charProbability.containsKey(key)) {
+            
+			// Generate a random probability
+            double randomProbability = (double)rand() / RAND_MAX;
+            
+			// If the random probability is less than or equal to the probability of the sequence
+            if (randomProbability <= charProbability[key]) {
+                
+				// Add the last character of the sequence to the random text
+                randomText += key[key.length() - 1]; // Add the last character of the key to random text
             }
         }
     }
-    return randomText;
 }
 
+    return randomText;
+}
 
 int analizeOrder(ifstream &in, int numOfChars) {
 	
